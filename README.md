@@ -1,66 +1,83 @@
-## Foundry
+# MultiSig Smart Contract
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+## Overview
 
-Foundry consists of:
+This Solidity smart contract implements a multi-signature wallet (MultiSig) on the Ethereum blockchain. It allows multiple owners to collectively manage and approve transactions from the wallet. Each transaction requires a predefined number of confirmations from the owners before execution.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## Development Tools
 
-## Documentation
+- **Foundry:** Used for the development environment, facilitating Ethereum smart contract development.
 
-https://book.getfoundry.sh/
+## Static Analysis and Auditing
 
-## Usage
+- **Slither:** Employed for automatic static analysis, gas optimization, and auditing of the smart contract.
+  
+- **Gas Optimization (@audit tags):**
+  - Gas optimizations are annotated with `@audit` tags for better readability and understanding during code review.
 
-### Build
 
-```shell
-$ forge build
-```
+## Contract Functions
 
-### Test
+### 1. `submitTransaction`
 
-```shell
-$ forge test
-```
+- **Description:** Allows an owner to submit a new transaction to the wallet.
+- **Modifier:** Only callable by an owner.
+- **Conditions:** Transaction must not be executed, and the owner's confirmation is automatically added.
+- **Events:** Emits `SubmitTransaction` event.
 
-### Format
+### 2. `approveTransaction`
 
-```shell
-$ forge fmt
-```
+- **Description:** Allows an owner to approve a pending transaction.
+- **Modifier:** Only callable by an owner.
+- **Conditions:** Transaction must exist, not be executed, and not be previously approved by the caller.
+- **Events:** Emits `ConfirmTransaction` if the required confirmations are reached, otherwise, emits `ConfirmTransaction` for the current approval.
 
-### Gas Snapshots
+### 3. `revokeConfirmation`
 
-```shell
-$ forge snapshot
-```
+- **Description:** Allows an owner to revoke their confirmation on a pending transaction.
+- **Modifier:** Only callable by an owner.
+- **Conditions:** Transaction must exist, not be executed, and the caller must have previously confirmed the transaction.
+- **Events:** Emits `RevokeConfirmation` event.
 
-### Anvil
+### 4. `getOwners`
 
-```shell
-$ anvil
-```
+- **Description:** Retrieves the list of wallet owners.
 
-### Deploy
+### 5. `getTransactionCount`
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+- **Description:** Retrieves the total number of transactions in the wallet.
 
-### Cast
+### 6. `getTransaction`
 
-```shell
-$ cast <subcommand>
-```
+- **Description:** Retrieves details about a specific transaction.
+- **Parameters:** Transaction index.
+- **Returns:** Transaction details (to, value, data, executed, numConfirmations).
 
-### Help
+### 7. `executeTransaction` (Internal Function)
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+- **Description:** Executes a confirmed transaction.
+- **Modifier:** Only callable by an owner.
+- **Conditions:** Transaction must exist, not be executed, and have the required number of confirmations.
+- **Events:** Emits `ExecuteTransaction` event.
+
+### 8. Receive Function
+
+- **Description:** Accepts Ether transfers to the contract.
+- **Events:** Emits `Deposit` event.
+
+## Events
+
+The contract emits several events for transparency:
+
+- `Deposit`: Triggered upon receiving Ether.
+- `SubmitTransaction`: Triggered when a new transaction is submitted.
+- `ConfirmTransaction`: Triggered when a transaction is confirmed.
+- `RevokeConfirmation`: Triggered when confirmation on a transaction is revoked.
+- `ExecuteTransaction`: Triggered when a transaction is executed.
+
+## Deployment
+
+The contract is deployed using the provided constructor, which initializes the owners and the required number of confirmations.
+
+```solidity
+constructor(address[] memory _owners, uint16 _numConfirmationsRequired) payable
